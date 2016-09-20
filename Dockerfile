@@ -2,18 +2,25 @@ FROM amancevice/pandas:0.18.1-python3
 MAINTAINER smallweirdnum@gmail.com
 
 # Install
-ENV CARAVEL_VERSION 0.10.0
 RUN apk add --no-cache \
         curl \
         g++ \
         libffi-dev \
         mariadb-dev \
-        postgresql-dev && \
+        postgresql-dev \
+        cyrus-sasl-dev \
+        git \
+        nodejs && \
     pip3 install \
-        caravel==$CARAVEL_VERSION \
         mysqlclient==1.3.7 \
         psycopg2==2.6.1 \
-        sqlalchemy-redshift==0.5.0
+        sqlalchemy-redshift==0.5.0 && \
+    git clone https://github.com/airbnb/caravel.git && \
+    cd caravel/caravel/assets && \
+    npm install && \
+    npm run prod && \
+    cd ../.. && \
+    python3 setup.py install
 
 # Default config
 ENV LANG=C.UTF-8 \
@@ -32,6 +39,6 @@ USER caravel
 
 # Deploy
 EXPOSE 8088
-# HEALTHCHECK CMD ["curl", "-f", "http://localhost:8088/health"]
+HEALTHCHECK CMD ["curl", "-f", "http://localhost:8088/health"]
 ENTRYPOINT ["caravel"]
 CMD ["runserver"]
